@@ -1,25 +1,39 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import Login from "./pages/Login"; // <-- Importe ta page Login
+import Login from "./pages/Login";
+import StudentExams from "./pages/StudentExams";
 
 function App() {
   return (
     <BrowserRouter>
       <Navbar />
       <Routes>
-        {/* Route publique pour afficher le Login */}
+        {/* Route publique */}
         <Route path="/login" element={<Login />} />
 
-        {/* Vos autres routes protégées ici */}
-        <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-          <Route path="/student/exams" element={<h2>Page Examens</h2>} />
-        </Route>
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin/dashboard" element={<h2>Dashboard Admin</h2>} />
-        </Route>
+        {/* Routes protégées Étudiant avec la prop `children` */}
+        <Route
+          path="/student/exams"
+          element={
+            <ProtectedRoute allowedRoles={["student"]}>
+              <StudentExams />
+            </ProtectedRoute>
+          }
+        />
+        
 
-        {/* Redirection vers /login par défaut */}
+        {/* Route protégée Admin */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <h2>Dashboard Admin</h2>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Redirection par défaut */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>

@@ -1,0 +1,72 @@
+.exams-container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-family: Arial, sans-serif;
+}
+
+.exams-container h2 {
+  color: #1e293b;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+}
+
+.exams-grid {
+  display: flex;
+  flex-direction: row; /* Aligne les cartes horizontalement */
+  justify-content: center; /* Centre les cartes sur la page */
+  flex-wrap: wrap; /* Permet le retour à la ligne uniquement sur petit écran */
+  gap: 20px; /* Espace raisonnable entre les cartes */
+  width: 100%;
+}
+
+.exam-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 20px;
+  width: 320px; /* Largeur fixe pour chaque carte */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.exam-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.exam-card h3 {
+  margin-top: 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+  margin-bottom: 15px;
+}
+
+.exam-info {
+  margin-bottom: 20px;
+}
+
+.exam-info p {
+  margin: 8px 0;
+  color: #475569;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exam-card button {
+  width: 100%;
+  padding: 10px 16px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.exam-card button:hover {
+  background-color: #1d4ed8;
+}
