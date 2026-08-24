@@ -2,10 +2,12 @@ import {Link,useNavigate} from 'react-router-dom';
 import './Navbar.css';
 const Navbar = () => {
   //const user = {role: "admin"};
-  const user=JSON.parse(localStorage.getItem("user") || "{}");
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
+  const user=JSON.parse(localStorage.getItem("user") || "{}");
+  
   const handleLogout = () => {
-    localStorage.clear;
+    localStorage.clear();
     navigate('/login');
   };
 
@@ -14,6 +16,7 @@ const Navbar = () => {
       <div className="navbar-logo">
         <Link to="/">QCMApp</Link>
       </div>
+      {token && (
         <ul className="navbar-links">
             {user.role === "student" && (
                 <>
@@ -21,6 +24,7 @@ const Navbar = () => {
                     <li><Link to="/student/results">RÉSULTATS</Link></li>
                 </>
             )}
+
             {user.role === "admin" && (
                <>
                     <li><Link to="/admin/dashboard">DASHBOARD</Link></li>
@@ -28,10 +32,14 @@ const Navbar = () => {
                     <li><Link to="/admin/exams">EXAMENS</Link></li>   
                </> 
             )}
-        </ul>
-        <button onClick={handleLogout} className='logout-btn'>
+        
+          <li>
+            <button onClick={handleLogout} className='logout-btn'>
             DÉCONNEXION
-        </button>
+            </button>
+          </li>
+        </ul>
+      )}
     </nav>
   );
 };
