@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import StudentExams from "./pages/StudentExams";
+import TakeExam from "./pages/TakeExam";
 
 function App() {
   return (
@@ -19,9 +20,17 @@ function App() {
             <ProtectedRoute allowedRoles={["student"]}>
               <StudentExams />
             </ProtectedRoute>
+            
           }
         />
-        
+        <Route
+          path="/student/exam"
+          element={
+           <ProtectedRoute allowedRoles={["student"]}>
+           <TakeExam />
+           </ProtectedRoute>
+          }
+        />  
 
         {/* Route protégée Admin */}
         <Route

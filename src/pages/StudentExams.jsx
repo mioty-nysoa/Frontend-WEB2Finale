@@ -32,7 +32,7 @@ const StudentExams = () => {
                     <p><strong>Début :</strong> {exam.startDate}</p>
                     <p> <strong>Fin :</strong> {exam.endDate}</p>
                     <p> <strong>Questions :</strong> {exam.questionsCount}</p>
-                    <button onClick={() => navigate(`/student/exam/${exam.id}`)}>
+                    <button onClick={() => navigate("/student/exam")}>
                      Commencer l'examen
                     </button>
                   </div>  
