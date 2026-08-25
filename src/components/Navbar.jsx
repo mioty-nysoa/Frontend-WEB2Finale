@@ -27,8 +27,8 @@ const Navbar = () => {
 
             {user.role === "admin" && (
                <>
-                    <li><Link to="/admin/dashboard">DASHBOARD</Link></li>
-                    <li><Link to="/admin/students">ÉTUDIANTS</Link></li>
+                    <li><Link to="/admin/academic">GESTION ACADEMIQUE</Link></li>
+                    <li><Link to="/admin/results">RESULTATS</Link></li>
                     <li><Link to="/admin/exams">EXAMENS</Link></li>   
                </> 
             )}

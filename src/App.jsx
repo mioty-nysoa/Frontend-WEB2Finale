@@ -4,6 +4,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import StudentExams from "./pages/StudentExams";
 import TakeExam from "./pages/TakeExam";
+import StudentResults from "./pages/StudentResults";
+import "./index.css";
 
 function App() {
   return (
@@ -24,13 +26,22 @@ function App() {
           }
         />
         <Route
-          path="/student/exam"
+          path="/student/exam/:id"
           element={
            <ProtectedRoute allowedRoles={["student"]}>
            <TakeExam />
            </ProtectedRoute>
           }
         />  
+        {/* La route DOIT s'appeler exactement comme dans le navigate de TakeExam.jsx */}
+        <Route
+          path="/student/results"
+          element={
+           <ProtectedRoute allowedRoles={["student"]}>
+           <StudentResults />
+           </ProtectedRoute>
+      }
+/>
 
         {/* Route protégée Admin */}
         <Route

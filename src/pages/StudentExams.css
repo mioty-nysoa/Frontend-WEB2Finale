@@ -1,72 +1,63 @@
 .exams-container {
   max-width: 1000px;
   margin: 40px auto;
-  padding: 0 20px;
-  font-family: Arial, sans-serif;
+  padding: 0 24px;
 }
 
 .exams-container h2 {
-  color: #1e293b;
-  margin-bottom: 25px;
-  font-size: 1.8rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin-bottom: 24px;
 }
 
 .exams-grid {
-  display: flex;
-  flex-direction: row; /* Aligne les cartes horizontalement */
-  justify-content: center; /* Centre les cartes sur la page */
-  flex-wrap: wrap; /* Permet le retour à la ligne uniquement sur petit écran */
-  gap: 20px; /* Espace raisonnable entre les cartes */
-  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 .exam-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
-  padding: 20px;
-  width: 320px; /* Largeur fixe pour chaque carte */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.exam-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .exam-card h3 {
-  margin-top: 0;
-  color: #0f172a;
-  font-size: 1.25rem;
-  margin-bottom: 15px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--primary-navy);
+  margin-bottom: 12px;
 }
 
-.exam-info {
-  margin-bottom: 20px;
+.exam-card p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
 }
 
-.exam-info p {
-  margin: 8px 0;
-  color: #475569;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.exam-card p strong {
+  color: var(--text-main);
 }
 
-.exam-card button {
-  width: 100%;
-  padding: 10px 16px;
-  background-color: #2563eb;
+.start-btn {
+  margin-top: 20px;
+  background-color:#0c0a64;
   color: #ffffff;
   border: none;
+  padding: 10px 16px;
   border-radius: 6px;
   font-weight: 600;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.exam-card button:hover {
-  background-color: #1d4ed8;
+.start-btn:hover {
+  background-color: #d6a41a;
 }

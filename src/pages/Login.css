@@ -1,72 +1,80 @@
 .login-container {
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  min-height: 80vh;
+  justify-content: center;
+  background-color: var(--bg-neutral);
+  padding: 20px;
 }
 
-.login-form {
-  background: #ffffff;
-  padding: 2.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.login-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   width: 100%;
   max-width: 400px;
+  padding: 40px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05);
 }
 
-.login-form h2 {
-  margin-bottom: 1.5rem;
+.login-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-navy);
+  margin-bottom: 8px;
   text-align: center;
-  color: #1e293b;
+}
+
+.login-card p {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  text-align: center;
+  margin-bottom: 32px;
 }
 
 .form-group {
-  margin-bottom: 1.25rem;
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 20px;
+  text-align: left;
 }
 
 .form-group label {
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #475569;
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 6px;
 }
 
 .form-group input {
-  padding: 0.75rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 1rem;
-}
-
-.login-btn {
   width: 100%;
-  padding: 0.75rem;
-  background-color: #2563eb;
-  color: white;
+  padding: 10px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-navy);
+}
+
+.login-submit-btn {
+  width: 100%;
+  background-color: var(--primary-navy);
+  color: #ffffff;
   border: none;
+  padding: 12px;
   border-radius: 6px;
-  font-size: 1rem;
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  margin-top: 1rem;
+  margin-top: 10px;
+  transition: background-color 0.2s ease;
 }
 
-.login-btn:hover {
-  background-color: #1d4ed8;
-}
-
-.login-btn:disabled {
-  background-color: #93c5fd;
-  cursor: not-allowed;
-}
-
-.error-message {
-  background-color: #fef2f2;
-  color: #dc2626;
-  padding: 0.75rem;
-  border-radius: 6px;
-  border: 1px solid #fecaca;
-  margin-bottom: 1rem;
-  text-align: center;
+.login-submit-btn:hover {
+  background-color: var(--primary-navy-hover);
 }
