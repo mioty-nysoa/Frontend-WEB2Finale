@@ -1,5 +1,6 @@
 import {useState , useEffect} from "react";
 import {useNavigate} from "react-router-dom";
+import { loginUser } from "../services/Api";
 import "./Login.css";
 
 const Login = () => {
@@ -11,9 +12,12 @@ const Login = () => {
     const token = localStorage.getItem("token");
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-    if (token) {
-      if (user.role === "student") navigate("/student/exams");
-      else if (user.role === "admin") navigate("/admin/dashboard");
+    if (token && user.role) {
+      if (user.role === "student") {
+        navigate("/student/exams", { replace: true });
+      } else if (user.role === "admin") {
+        navigate("/admin/exams", { replace: true }); // Redirige vers /admin/exams qui existe bien dans App.jsx
+      };
     }
   }, [navigate]);
 

@@ -14,20 +14,21 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <Link to="/">QCMApp</Link>
+        <Link to={token ? (user.role === "admin" ? "/admin" : "/student") : "/login"}>QCMApp</Link>
       </div>
       {token && (
         <ul className="navbar-links">
             {user.role === "student" && (
                 <>
-                    <li><Link to="/student/exams">EXAMENS</Link></li>
+                    <li><Link to="/student">EXAMENS</Link></li>
                     <li><Link to="/student/results">RÉSULTATS</Link></li>
                 </>
             )}
 
             {user.role === "admin" && (
                <>
-                    <li><Link to="/admin/academic">GESTION ACADEMIQUE</Link></li>
+                    <li><Link to="/admin">DASHBOARD</Link></li>
+                    <li><Link to="/admin/students">ETUDIANTS</Link></li>
                     <li><Link to="/admin/results">RESULTATS</Link></li>
                     <li><Link to="/admin/exams">EXAMENS</Link></li>   
                </> 

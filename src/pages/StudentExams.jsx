@@ -1,6 +1,6 @@
-import React,{useEffect,useState} from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchExams } from "../services/Api";
+import { fetchExams, fetchStudentResults } from "../services/Api";
 import "./StudentExams.css"; 
 
 const StudentExams = () => {
@@ -9,14 +9,22 @@ const StudentExams = () => {
   const [savedResults, setSavedResults] = useState([]);
 
   useEffect(() => {
-    Promise.all([fetchExams(), fetchStudentResults()])
-      .then(([examsData, resultsData]) => {
-        setAllExams(examsData || []);
-        setSavedResults(resultsData || []);
-      })
-      .catch((err) => {
-        console.error("Erreur de chargement des données :", err);
-      });
+    // 1. On récupère les données de l'utilisateur stockées à la connexion
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    // 2. On ne lance l'appel API que si l'étudiant est bien identifié
+    if (user && user.id) {
+      Promise.all([fetchExams(), fetchStudentResults(user.id)])
+        .then(([examsData, resultsData]) => {
+          setAllExams(examsData || []);
+          setSavedResults(resultsData || []);
+        })
+        .catch((err) => {
+          console.error("Erreur de chargement des données :", err);
+        });
+    } else {
+      console.warn("Utilisateur non trouvé dans le localStorage.");
+    }
   }, []);
 
   const completedExamIds = savedResults.map((result) => result.examId);

@@ -6,6 +6,7 @@
   background-color: #ffffff;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  z-index: 100;
 }
 
 .navbar-logo a {
@@ -20,6 +21,13 @@
   list-style: none;
   gap: 1.5rem;
   align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links li {
+  display: flex;
+  align-items: center;
 }
 
 .navbar-links a {
@@ -27,6 +35,9 @@
   color: #0f172a;
   font-weight: 500;
   transition: color 0.2s;
+  position: relative;
+  z-index: 101;
+  cursor: pointer;
 }
 
 .navbar-links a:hover {

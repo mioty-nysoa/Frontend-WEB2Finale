@@ -1,6 +1,7 @@
 import React,{useState,useEffect} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./StudentResults.css";  
+import { fetchStudentResults } from "../services/Api";
 const StudentResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -10,13 +11,21 @@ const StudentResults = () => {
   const [savedResults, setSavedResults] = useState([]);
 
   useEffect(() => {
-    fetchStudentResults()
-      .then((data) => {
-        setSavedResults(data || []);
-      })
-      .catch((err) => {
-        console.error("Erreur de chargement de l'historique :", err);
-      });
+    // 1. Récupération de l'utilisateur connecté
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    // 2. Appel API sécurisé avec l'ID de l'étudiant
+    if (user && user.id) {
+      fetchStudentResults(user.id)
+        .then((data) => {
+          setSavedResults(data || []);
+        })
+        .catch((err) => {
+          console.error("Erreur de chargement de l'historique :", err);
+        });
+    } else {
+      console.warn("Utilisateur non identifié dans le localStorage.");
+    }
   }, []);
 
   return (
