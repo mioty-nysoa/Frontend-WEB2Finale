@@ -1,6 +1,7 @@
 import { useState,useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import "./TakeExam.css"; // Assurez-vous de créer ce fichier CSS pour le style
+import "./Student.css";
+
 const TakeExam = () => {
   const navigate = useNavigate();
   const { id } = useParams();

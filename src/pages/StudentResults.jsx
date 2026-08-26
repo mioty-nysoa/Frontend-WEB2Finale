@@ -1,6 +1,6 @@
 import React,{useState,useEffect} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "./StudentResults.css";  
+import "./Student.css";  
 import { fetchStudentResults } from "../services/Api";
 const StudentResults = () => {
   const location = useLocation();
