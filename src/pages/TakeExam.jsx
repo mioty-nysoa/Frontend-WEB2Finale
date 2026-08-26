@@ -13,7 +13,6 @@ const TakeExam = () => {
   const [answers, setAnswers] = useState({});
 
   useEffect(() => {
-    // Récupération du sujet d'examen depuis l'API
     fetchExamById(id)
       .then((data) => {
         if (data) setExam(data);
@@ -30,45 +29,21 @@ const TakeExam = () => {
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
-    let score = 0;
-
-    const processedQuestions = exam.questions.map((q) => {
-      const userAnswer = answers[q.id];
-      const isCorrect = userAnswer === q.correctAnswer;
-
-      if (isCorrect) {
-        score += 1;
-      }
-
-      return {
-        id: q.id,
-        text: q.text,
-        userAnswer: userAnswer || "Non répondue",
-        isCorrect: isCorrect,
-      };
-    });
-
-    const newResult = {
-      id: Date.now(),
+ const payload = {
       examId: parseInt(id) || exam.id,
-      examTitle: exam.title,
-      score: score,
-      totalQuestions: exam.questions.length,
-      questions: processedQuestions,
-      date: new Date().toLocaleDateString("fr-FR"),
+      answers: exam.questions.map((q) => ({
+        questionId: q.id,
+        selectedOptionId: answers[q.id] !== undefined ? answers[q.id] : null, // null si non répondue (RG-05)
+      })),
     };
 
     try {
-      await submitExam({
-        examId: parseInt(id) || exam.id,
-        answers: answers,
-      });
+       const resultData = await submitExam(payload);
+
+      navigate("/student/results", { state: resultData });
     } catch (err) {
       console.error("Erreur de sauvegarde sur le serveur :", err);
     }
-
-    // 2. Navigation vers la page des résultats
-    navigate("/student/results", { state: newResult });
   };
 
   return (
