@@ -35,8 +35,10 @@ export const submitExam = (examData) =>
     body: JSON.stringify(examData),
   });
 
-export const fetchStudentResults = (studentId) =>
-  customFetch(`/results/student/${studentId}`);
+export const fetchStudentResults = (studentId) => {
+  if (!studentId) return Promise.reject("ID étudiant manquant");
+  return customFetch(`/results/student/${studentId}`);
+};
 
 export const loginUser = (credentials) =>
   customFetch("/auth/login", {

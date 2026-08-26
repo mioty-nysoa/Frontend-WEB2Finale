@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 
 import Login from "./pages/Login";
+import Navbar from "./components/Navbar";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminStudents from "./pages/AdminStudents";
@@ -21,6 +22,7 @@ import TakeExam from "./pages/TakeExam";
 function App() {
   return (
     <BrowserRouter>
+      <Navbar/>
       <Routes>
         <Route
           path="/login"
