@@ -1,41 +1,71 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import "./Admin.css";
 
 const API_URL =
   import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 function AdminQuestions() {
-  const [exams, setExams] = useState([]);
-  const [selectedExam, setSelectedExam] = useState("");
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [exam, setExam] = useState(null);
   const [questions, setQuestions] = useState([]);
 
   const [form, setForm] = useState({
     text: "",
     points: 1,
     choices: [
-      { text: "", correct: true },
-      { text: "", correct: false },
+      {
+        text: "",
+        correct: true,
+      },
+      {
+        text: "",
+        correct: false,
+      },
     ],
   });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const getToken = () => localStorage.getItem("token");
+  // =========================
+  // TOKEN JWT
+  // =========================
+
+  const getToken = () => {
+    return localStorage.getItem("token");
+  };
+
+  // =========================
+  // REQUÊTE API
+  // =========================
 
   const request = async (url, options = {}) => {
+    const token = getToken();
+
     const response = await fetch(`${API_URL}${url}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
+
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+
         ...(options.headers || {}),
       },
     });
 
     const data =
-      response.status === 204 ? null : await response.json();
+      response.status === 204
+        ? null
+        : await response.json();
 
     if (!response.ok) {
       throw new Error(
@@ -48,40 +78,39 @@ function AdminQuestions() {
     return data;
   };
 
-  const loadExams = async () => {
+  // =========================
+  // CHARGER L'EXAMEN
+  // =========================
+
+  const loadExam = async () => {
     try {
-      setError("");
-
-      const data = await request("/api/exams");
-
-      setExams(
-        Array.isArray(data)
-          ? data
-          : data.exams || []
+      const data = await request(
+        `/api/exams/${id}`
       );
+
+      setExam(data?.exam || data);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const loadQuestions = async (examId) => {
-    if (!examId) {
-      setQuestions([]);
-      return;
-    }
+  // =========================
+  // CHARGER LES QUESTIONS
+  // =========================
 
+  const loadQuestions = async () => {
     try {
       setLoading(true);
       setError("");
 
       const data = await request(
-        `/api/exams/${examId}/questions`
+        `/api/exams/${id}/questions`
       );
 
       setQuestions(
         Array.isArray(data)
           ? data
-          : data.questions || []
+          : data?.questions || []
       );
     } catch (err) {
       setError(err.message);
@@ -91,13 +120,60 @@ function AdminQuestions() {
     }
   };
 
-  useEffect(() => {
-    loadExams();
-  }, []);
+  // =========================
+  // CHARGEMENT INITIAL
+  // =========================
 
   useEffect(() => {
-    loadQuestions(selectedExam);
-  }, [selectedExam]);
+    if (!id) {
+      setError(
+        "Identifiant de l'examen manquant."
+      );
+      setLoading(false);
+      return;
+    }
+
+    const loadData = async () => {
+      await Promise.all([
+        loadExam(),
+        loadQuestions(),
+      ]);
+    };
+
+    loadData();
+  }, [id]);
+
+  // =========================
+  // MODIFIER L'ÉNONCÉ
+  // =========================
+
+  const handleTextChange = (event) => {
+    setForm({
+      ...form,
+      text: event.target.value,
+    });
+
+    setError("");
+    setSuccess("");
+  };
+
+  // =========================
+  // MODIFIER LES POINTS
+  // =========================
+
+  const handlePointsChange = (event) => {
+    setForm({
+      ...form,
+      points: event.target.value,
+    });
+
+    setError("");
+    setSuccess("");
+  };
+
+  // =========================
+  // MODIFIER UN CHOIX
+  // =========================
 
   const handleChoiceChange = (index, value) => {
     const updatedChoices = [...form.choices];
@@ -111,7 +187,14 @@ function AdminQuestions() {
       ...form,
       choices: updatedChoices,
     });
+
+    setError("");
+    setSuccess("");
   };
+
+  // =========================
+  // CHOISIR LA BONNE RÉPONSE
+  // =========================
 
   const handleCorrectChoice = (index) => {
     const updatedChoices = form.choices.map(
@@ -125,7 +208,13 @@ function AdminQuestions() {
       ...form,
       choices: updatedChoices,
     });
+
+    setError("");
   };
+
+  // =========================
+  // AJOUTER UN CHOIX
+  // =========================
 
   const addChoice = () => {
     if (form.choices.length >= 6) {
@@ -134,8 +223,6 @@ function AdminQuestions() {
       );
       return;
     }
-
-    setError("");
 
     setForm({
       ...form,
@@ -147,7 +234,13 @@ function AdminQuestions() {
         },
       ],
     });
+
+    setError("");
   };
+
+  // =========================
+  // SUPPRIMER UN CHOIX
+  // =========================
 
   const removeChoice = (index) => {
     if (form.choices.length <= 2) {
@@ -160,13 +253,17 @@ function AdminQuestions() {
     const removedChoice = form.choices[index];
 
     const updatedChoices = form.choices.filter(
-      (_, choiceIndex) => choiceIndex !== index
+      (_, choiceIndex) =>
+        choiceIndex !== index
     );
 
+    // Si on supprime la bonne réponse,
+    // le premier choix devient correct.
     if (removedChoice.correct) {
       updatedChoices.forEach(
         (choice, choiceIndex) => {
-          choice.correct = choiceIndex === 0;
+          choice.correct =
+            choiceIndex === 0;
         }
       );
     }
@@ -179,15 +276,31 @@ function AdminQuestions() {
     setError("");
   };
 
+  // =========================
+  // CRÉER UNE QUESTION
+  // =========================
+
   const handleCreate = async (event) => {
     event.preventDefault();
 
     setError("");
     setSuccess("");
 
-    if (!selectedExam) {
+    if (!form.text.trim()) {
       setError(
-        "Veuillez sélectionner un examen."
+        "L'énoncé de la question est obligatoire."
+      );
+      return;
+    }
+
+    const points = Number(form.points);
+
+    if (
+      !Number.isInteger(points) ||
+      points < 1
+    ) {
+      setError(
+        "Le nombre de points doit être un entier supérieur ou égal à 1."
       );
       return;
     }
@@ -202,20 +315,9 @@ function AdminQuestions() {
       return;
     }
 
-    const correctChoices = form.choices.filter(
-      (choice) => choice.correct
-    );
-
-    if (correctChoices.length !== 1) {
-      setError(
-        "Une question doit avoir exactement une bonne réponse."
-      );
-      return;
-    }
-
     if (
       form.choices.some(
-        (choice) => choice.text.trim() === ""
+        (choice) => !choice.text.trim()
       )
     ) {
       setError(
@@ -224,15 +326,34 @@ function AdminQuestions() {
       return;
     }
 
+    const correctChoices =
+      form.choices.filter(
+        (choice) => choice.correct
+      );
+
+    if (correctChoices.length !== 1) {
+      setError(
+        "Une question doit avoir exactement une bonne réponse."
+      );
+      return;
+    }
+
     try {
+      setCreating(true);
+
       await request(
-        `/api/exams/${selectedExam}/questions`,
+        `/api/exams/${id}/questions`,
         {
           method: "POST",
           body: JSON.stringify({
-            text: form.text,
-            points: Number(form.points),
-            choices: form.choices,
+            text: form.text.trim(),
+            points,
+            choices: form.choices.map(
+              (choice) => ({
+                text: choice.text.trim(),
+                correct: choice.correct,
+              })
+            ),
           }),
         }
       );
@@ -241,20 +362,34 @@ function AdminQuestions() {
         "Question créée avec succès."
       );
 
+      // Réinitialiser le formulaire
       setForm({
         text: "",
         points: 1,
         choices: [
-          { text: "", correct: true },
-          { text: "", correct: false },
+          {
+            text: "",
+            correct: true,
+          },
+          {
+            text: "",
+            correct: false,
+          },
         ],
       });
 
-      await loadQuestions(selectedExam);
+      // Recharger les questions depuis le backend
+      await loadQuestions();
     } catch (err) {
       setError(err.message);
+    } finally {
+      setCreating(false);
     }
   };
+
+  // =========================
+  // SUPPRIMER UNE QUESTION
+  // =========================
 
   const handleDelete = async (questionId) => {
     const confirmed = window.confirm(
@@ -280,7 +415,7 @@ function AdminQuestions() {
         "Question supprimée avec succès."
       );
 
-      await loadQuestions(selectedExam);
+      await loadQuestions();
     } catch (err) {
       setError(err.message);
     }
@@ -289,14 +424,25 @@ function AdminQuestions() {
   return (
     <div className="admin-page">
       <div className="admin-container">
+
+        {/* =========================
+            HEADER
+        ========================= */}
+
         <div className="admin-header">
           <div>
             <h1>Gestion des questions</h1>
+
             <p>
-              Créez et gérez les questions des examens.
+              Créez et gérez les questions de
+              l'examen.
             </p>
           </div>
         </div>
+
+        {/* =========================
+            MESSAGES
+        ========================= */}
 
         {error && (
           <div className="admin-error">
@@ -310,225 +456,275 @@ function AdminQuestions() {
           </div>
         )}
 
+        {/* =========================
+            INFORMATIONS EXAMEN
+        ========================= */}
+
         <div className="admin-card">
-          <h2>Sélectionner un examen</h2>
+          <h2>Examen</h2>
 
-          <div className="form-group">
-            <label htmlFor="exam">
-              Examen
-            </label>
+          {loading ? (
+            <p>
+              Chargement de l'examen...
+            </p>
+          ) : exam ? (
+            <>
+              <h3>
+                {exam.title ||
+                  exam.name ||
+                  `Examen ${id}`}
+              </h3>
 
-            <select
-              id="exam"
-              value={selectedExam}
-              onChange={(event) => {
-                setSelectedExam(
-                  event.target.value
-                );
-                setError("");
-                setSuccess("");
-              }}
-            >
-              <option value="">
-                Sélectionner un examen
-              </option>
-
-              {exams.map((exam) => (
-                <option
-                  key={exam.id}
-                  value={exam.id}
-                >
-                  {exam.title ||
-                    exam.name ||
-                    `Examen ${exam.id}`}
-                </option>
-              ))}
-            </select>
-          </div>
+              {exam.description && (
+                <p>
+                  {exam.description}
+                </p>
+              )}
+            </>
+          ) : (
+            <p>
+              Impossible de charger
+              l'examen.
+            </p>
+          )}
         </div>
 
-        {selectedExam && (
-          <>
-            <div className="admin-card">
-              <h2>Créer une question</h2>
+        {/* =========================
+            CREER QUESTION
+        ========================= */}
 
-              <form
-                className="admin-form"
-                onSubmit={handleCreate}
-              >
-                <div className="form-group">
-                  <label htmlFor="question">
-                    Énoncé de la question
-                  </label>
+        <div className="admin-card">
+          <h2>Créer une question</h2>
 
-                  <textarea
-                    id="question"
-                    value={form.text}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        text: event.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
+          <form
+            className="admin-form"
+            onSubmit={handleCreate}
+          >
 
-                <div className="form-group">
-                  <label htmlFor="points">
-                    Nombre de points
-                  </label>
+            {/* ÉNONCÉ */}
 
-                  <input
-                    id="points"
-                    type="number"
-                    min="1"
-                    value={form.points}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        points:
-                          event.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
+            <div className="form-group">
+              <label htmlFor="question">
+                Énoncé de la question
+              </label>
 
-                <div className="form-group">
-                  <label>
-                    <strong>
-                      Choix de réponse
-                    </strong>
-                  </label>
-
-                  {form.choices.map(
-                    (choice, index) => (
-                      <div
-                        className="choice-row"
-                        key={index}
-                      >
-                        <input
-                          type="radio"
-                          name="correctChoice"
-                          checked={choice.correct}
-                          onChange={() =>
-                            handleCorrectChoice(
-                              index
-                            )
-                          }
-                        />
-
-                        <input
-                          type="text"
-                          placeholder={`Choix ${
-                            index + 1
-                          }`}
-                          value={choice.text}
-                          onChange={(event) =>
-                            handleChoiceChange(
-                              index,
-                              event.target.value
-                            )
-                          }
-                          required
-                        />
-
-                        <button
-                          type="button"
-                          className="btn btn-danger"
-                          onClick={() =>
-                            removeChoice(index)
-                          }
-                        >
-                          Supprimer
-                        </button>
-                      </div>
-                    )
-                  )}
-                </div>
-
-                <div className="admin-actions">
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={addChoice}
-                    disabled={
-                      form.choices.length >= 6
-                    }
-                  >
-                    Ajouter un choix
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                  >
-                    Créer la question
-                  </button>
-                </div>
-              </form>
+              <textarea
+                id="question"
+                value={form.text}
+                onChange={handleTextChange}
+                placeholder="Saisissez la question..."
+                required
+              />
             </div>
 
-            <div className="admin-card">
-              <h2>Questions existantes</h2>
+            {/* POINTS */}
 
-              {loading ? (
-                <div className="admin-loading">
-                  Chargement des questions...
-                </div>
-              ) : questions.length === 0 ? (
-                <p>
-                  Aucune question pour cet examen.
-                </p>
-              ) : (
-                questions.map((question) => (
+            <div className="form-group">
+              <label htmlFor="points">
+                Nombre de points
+              </label>
+
+              <input
+                id="points"
+                type="number"
+                min="1"
+                value={form.points}
+                onChange={handlePointsChange}
+                required
+              />
+            </div>
+
+            {/* CHOIX */}
+
+            <div className="form-group">
+              <label>
+                <strong>
+                  Réponses
+                </strong>
+              </label>
+
+              <p>
+                Sélectionnez une seule
+                bonne réponse.
+              </p>
+
+              {form.choices.map(
+                (choice, index) => (
                   <div
-                    className="question-card"
-                    key={question.id}
+                    className="choice-row"
+                    key={index}
                   >
-                    <strong>
-                      {question.statement ||
-                        question.text ||
-                        question.question}
-                    </strong>
 
-                    <p>
-                      Points :{" "}
-                      {question.points ?? 1}
-                    </p>
+                    {/* RADIO */}
 
+                    <input
+                      type="radio"
+                      name="correctChoice"
+                      checked={
+                        choice.correct
+                      }
+                      onChange={() =>
+                        handleCorrectChoice(
+                          index
+                        )
+                      }
+                    />
+
+                    {/* TEXTE */}
+
+                    <input
+                      type="text"
+                      value={choice.text}
+                      placeholder={`Choix ${
+                        index + 1
+                      }`}
+                      onChange={(event) =>
+                        handleChoiceChange(
+                          index,
+                          event.target.value
+                        )
+                      }
+                      required
+                    />
+
+                    {/* SUPPRIMER */}
+
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() =>
+                        removeChoice(index)
+                      }
+                    >
+                      Supprimer
+                    </button>
+
+                  </div>
+                )
+              )}
+            </div>
+
+            {/* ACTIONS */}
+
+            <div className="admin-actions">
+
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={addChoice}
+                disabled={
+                  form.choices.length >= 6
+                }
+              >
+                Ajouter un choix
+              </button>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={creating}
+              >
+                {creating
+                  ? "Création..."
+                  : "Créer la question"}
+              </button>
+
+            </div>
+          </form>
+        </div>
+
+        {/* =========================
+            QUESTIONS EXISTANTES
+        ========================= */}
+
+        <div className="admin-card">
+          <h2>
+            Questions existantes
+          </h2>
+
+          {loading ? (
+            <div className="admin-loading">
+              Chargement des questions...
+            </div>
+          ) : questions.length === 0 ? (
+            <p>
+              Aucune question pour cet
+              examen.
+            </p>
+          ) : (
+            questions.map(
+              (question, index) => (
+                <div
+                  className="question-card"
+                  key={question.id}
+                >
+
+                  <h3>
+                    Question {index + 1}
+                  </h3>
+
+                  <strong>
+                    {question.text ||
+                      question.statement ||
+                      question.question}
+                  </strong>
+
+                  <p>
+                    Points :{" "}
+                    {question.points ?? 1}
+                  </p>
+
+                  <div>
                     {question.choices?.map(
                       (choice) => (
                         <div
                           key={choice.id}
                         >
-                          {choice.text}{" "}
-                          {choice.correct &&
-                            "✓"}
+                          {choice.correct
+                            ? "✓ "
+                            : "○ "}
+                          {choice.text}
                         </div>
                       )
                     )}
-
-                    <div className="admin-actions">
-                      <button
-                        type="button"
-                        className="btn btn-danger"
-                        onClick={() =>
-                          handleDelete(
-                            question.id
-                          )
-                        }
-                      >
-                        Supprimer
-                      </button>
-                    </div>
                   </div>
-                ))
-              )}
-            </div>
-          </>
-        )}
+
+                  <div className="admin-actions">
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() =>
+                        handleDelete(
+                          question.id
+                        )
+                      }
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+
+                </div>
+              )
+            )
+          )}
+        </div>
+
+        {/* =========================
+            RETOUR
+        ========================= */}
+
+        <div className="admin-actions">
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() =>
+              navigate("/admin/exams")
+            }
+          >
+            Retour aux examens
+          </button>
+        </div>
+
       </div>
     </div>
   );
