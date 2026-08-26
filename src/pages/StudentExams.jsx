@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchExams, fetchStudentResults } from "../services/Api";
-import "./StudentExams.css"; 
+import "./Student.css"; 
 
 const StudentExams = () => {
   const navigate = useNavigate();
