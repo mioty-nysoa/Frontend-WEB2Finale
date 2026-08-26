@@ -1,5 +1,6 @@
 import React,{useEffect,useState} from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchExams } from "../services/Api";
 import "./StudentExams.css"; 
 
 const StudentExams = () => {
