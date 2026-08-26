@@ -1,84 +1,88 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import ProtectedRoute from './components/ProtectedRoute';
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-// Vos pages communes & étudiant
-import Login from './pages/Login';
-import StudentExams from './pages/StudentExams';
-import TakeExam from './pages/TakeExam'; // ou la page de passage d'examen
-import StudentResults from './pages/StudentResults';
+import Login from "./pages/Login";
 
-// Les pages admin apportées par ta collaboratrice
-import AdminDashboard from './pages/AdminDashboard'; // /admin
-import StudentManagement from './pages/StudentManagement'; // /admin/students
-import CourseManagement from './pages/CourseManagement'; // /admin/courses
-import ExamManagement from './pages/ExamManagement'; // /admin/exams
-import QuestionEditor from './pages/QuestionEditor'; // /admin/exams/:id/questions
-import ExamResultsAdmin from './pages/ExamResultsAdmin'; // /admin/exams/:id/results
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminStudents from "./pages/AdminStudents";
+import AdminCourses from "./pages/AdminCourses";
+import AdminExams from "./pages/AdminExams";
+import AdminQuestions from "./pages/AdminQuestions";
+import AdminResults from "./pages/AdminResults";
+
+import StudentResults from "./pages/StudentResults";
+import StudentsExams from "./pages/StudentExams";
+import TakeExam from "./pages/TakeExam";
 
 function App() {
   return (
-    <Router>
-      <Navbar />
-      <div className="main-content">
-        <Routes>
-          {/* Route publique */}
-          <Route path="/login" element={<Login />} />
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-          {/* Espace ÉTUDIANT (Rôle: student) */}
-          <Route path="/student" element={
-            <ProtectedRoute allowedRole="student">
-              <StudentExams />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/exams/:id" element={
-            <ProtectedRoute allowedRole="student">
-              <TakeExam />
-            </ProtectedRoute>
-          } />
-          <Route path="/student/results" element={
-            <ProtectedRoute allowedRole="student">
-              <StudentResults />
-            </ProtectedRoute>
-          } />
+        <Route
+          path="/admin"
+          element={<AdminDashboard />}
+        />
 
-          {/* Espace ADMINISTRATEUR (Rôle: admin) */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRole="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/students" element={
-            <ProtectedRoute allowedRole="admin">
-              <StudentManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/courses" element={
-            <ProtectedRoute allowedRole="admin">
-              <CourseManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/exams" element={
-            <ProtectedRoute allowedRole="admin">
-              <ExamManagement />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/exams/:id/questions" element={
-            <ProtectedRoute allowedRole="admin">
-              <QuestionEditor />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/exams/:id/results" element={
-            <ProtectedRoute allowedRole="admin">
-              <ExamResultsAdmin />
-            </ProtectedRoute>
-          } />
+        <Route
+          path="/admin/students"
+          element={<AdminStudents />}
+        />
 
-          {/* Redirection par défaut si la route n'existe pas */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </div>
-    </Router>
+        <Route
+          path="/admin/courses"
+          element={<AdminCourses />}
+        />
+
+        <Route
+          path="/admin/exams"
+          element={<AdminExams />}
+        />
+
+        <Route
+          path="/admin/exams/:id/questions"
+          element={<AdminQuestions />}
+        />
+
+        <Route
+          path="/admin/exams/:id/results"
+          element={<AdminResults />}
+        />
+
+        <Route
+          path="/student/results"
+          element={<StudentResults />}
+        />
+
+        <Route
+          path="/student/exams"
+          element={<StudentsExams />}
+        />
+
+        <Route
+          path="/student/exams/:id"
+          element={<TakeExam />}
+        />
+
+        <Route
+          path="/"
+          element={<Navigate to="/login" replace />}
+        />
+
+        <Route
+          path="*"
+          element={<Navigate to="/login" replace />}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
