@@ -20,22 +20,11 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:5000/api/auth/login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
-            });
+            const data = await loginUser({ email, password });
 
-            if (!response.ok) {
-                throw new Error("Login failed");
-            }
-
-            const data = await response.json();
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.user));
-            
+
             if(data.user?.role === "student"){
                 navigate("/student/exams");
             }
@@ -50,9 +39,9 @@ const Login = () => {
             alert("Connexion échoué");
         }
     };
-
     return (
         <div className="login-container">
+            <div className="login-card">
             <form onSubmit={handleSubmit} className="login-form">
                 <h2>CONNEXION</h2>
                 <div className="form-group">
@@ -77,6 +66,7 @@ const Login = () => {
                 </div>
                 <button type="submit" className="login-btn">SE CONNECTER</button>
             </form>
+            </div>
         </div>
     );
 };

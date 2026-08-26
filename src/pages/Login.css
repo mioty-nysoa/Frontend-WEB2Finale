@@ -3,13 +3,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-neutral);
   padding: 20px;
 }
 
 .login-card {
-  background: var(--surface-card);
-  border: 1px solid var(--border-subtle);
+  background:#ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
   width: 100%;
   max-width: 400px;
@@ -20,13 +19,13 @@
 .login-card h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary-navy);
+  color:#0f172a;
   margin-bottom: 8px;
   text-align: center;
 }
 
 .login-card p {
-  color: var(--text-muted);
+  color: #64748b;
   font-size: 0.875rem;
   text-align: center;
   margin-bottom: 32px;
@@ -41,29 +40,29 @@
   display: block;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-main);
+  color: #0f172a;
   margin-bottom: 6px;
 }
 
 .form-group input {
   width: 100%;
   padding: 10px 14px;
-  border: 1px solid var(--border-subtle);
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-size: 0.95rem;
-  font-family: var(--font-sans);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #ffffff;
   transition: border-color 0.2s ease;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: var(--primary-navy);
+  border-color: #0f172a;
 }
 
-.login-submit-btn {
+.login-btn {
   width: 100%;
-  background-color: var(--primary-navy);
+  background-color: #0f172a;
   color: #ffffff;
   border: none;
   padding: 12px;
@@ -75,6 +74,6 @@
   transition: background-color 0.2s ease;
 }
 
-.login-submit-btn:hover {
-  background-color: var(--primary-navy-hover);
+.login-btn:hover {
+  background-color: #d6a41a;
 }

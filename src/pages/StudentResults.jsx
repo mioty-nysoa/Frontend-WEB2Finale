@@ -1,17 +1,23 @@
-import React from "react";
+import React,{useState,useEffect} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "./StudentResults.css"; // Assurez-vous de créer ce fichier CSS pour le style
+import "./StudentResults.css";  
 const StudentResults = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 1. Résultat de l'examen venant d'être soumis
   const recentSubmission = location.state;
 
-  // 2. Historique complet depuis le localStorage
-  const savedResults = JSON.parse(
-    localStorage.getItem("student_results") || "[]"
-  );
+  const [savedResults, setSavedResults] = useState([]);
+
+  useEffect(() => {
+    fetchStudentResults()
+      .then((data) => {
+        setSavedResults(data || []);
+      })
+      .catch((err) => {
+        console.error("Erreur de chargement de l'historique :", err);
+      });
+  }, []);
 
   return (
     <div className="results-container">
