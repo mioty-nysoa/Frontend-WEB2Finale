@@ -17,31 +17,43 @@ const customFetch = async (endpoint, options = {}) => {
 
   const response = await fetch(`${BASE_URL}${endpoint}`, config);
 
-  // Gestion des erreurs HTTP (ex: 404, 500)
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.message || `Erreur HTTP : ${response.status}`);
   }
 
-  return response.json();
-};
-export const fetchExams = () => customFetch("/exams");
-
-export const fetchExamById = (id) => customFetch(`/exams/${id}`);
-
-export const submitExam = (examData) =>
-  customFetch("/results", {
-    method: "POST",
-    body: JSON.stringify(examData),
-  });
-
-export const fetchStudentResults = (studentId) => {
-  if (!studentId) return Promise.reject("ID étudiant manquant");
-  return customFetch(`/results/student/${studentId}`);
+  return response.status === 204 ? null : response.json();
 };
 
 export const loginUser = (credentials) =>
   customFetch("/auth/login", {
     method: "POST",
     body: JSON.stringify(credentials),
+  });
+
+export const fetchMyExams = () => customFetch("/my/exams");
+
+export const fetchMyExamById = (id) => customFetch(`/my/exams/${id}`);
+
+export const submitExam = (examId, answers) =>
+  customFetch(`/my/exams/${examId}/submit`, {
+    method: "POST",
+    body: JSON.stringify({ answers }),
+  });
+
+export const fetchMyResults = () => customFetch("/my/results");
+
+export const fetchAdminExams = () => customFetch("/exams");
+
+export const fetchExamQuestions = (examId) => customFetch(`/exams/${examId}/questions`);
+
+export const createQuestion = (examId, questionData) =>
+  customFetch(`/exams/${examId}/questions`, {
+    method: "POST",
+    body: JSON.stringify(questionData),
+  });
+
+  export const deleteQuestion = (questionId) =>
+  customFetch(`/questions/${questionId}`, {
+    method: "DELETE",
   });
