@@ -1,9 +1,8 @@
-const BASE_URL = "http://localhost:5000/api"; // Ajuste le port selon ton backend
+const BASE_URL = "http://localhost:3000/api"; 
 
 const customFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem("token");
 
-  // Configuration par défaut
   const headers = {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
@@ -38,7 +37,7 @@ export const fetchMyExamById = (id) => customFetch(`/my/exams/${id}`);
 export const submitExam = (examId, answers) =>
   customFetch(`/my/exams/${examId}/submit`, {
     method: "POST",
-    body: JSON.stringify({ answers }),
+    body: JSON.stringify(answers),
   });
 
 export const fetchMyResults = () => customFetch("/my/results");
