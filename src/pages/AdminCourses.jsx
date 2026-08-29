@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import "./Admin.css";
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { fetchCourses, createCourse } from "../services/Api";
 
 function AdminCourses() {
   const [courses, setCourses] = useState([]);
@@ -16,48 +14,14 @@ function AdminCourses() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const getToken = () => localStorage.getItem("token");
-
-  const request = async (url, options = {}) => {
-    const response = await fetch(`${API_URL}${url}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-        ...(options.headers || {}),
-      },
-    });
-
-    let data = null;
-
-    if (response.status !== 204) {
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        data?.message ||
-          "Une erreur est survenue lors de la requête."
-      );
-    }
-
-    return data;
-  };
-
   const loadCourses = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const data = await request("/api/courses");
+      const data = await fetchCourses();
 
-      setCourses(
-        Array.isArray(data) ? data : data?.courses || []
-      );
+      setCourses(Array.isArray(data) ? data : data?.courses || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -83,13 +47,10 @@ function AdminCourses() {
       setError("");
       setSuccess("");
 
-      await request("/api/courses", {
-        method: "POST",
-        body: JSON.stringify({
-          code: form.code,
-          name: form.name,
-          description: form.description,
-        }),
+      await createCourse({
+        code: form.code,
+        name: form.name,
+        description: form.description,
       });
 
       setSuccess("Cours créé avec succès.");
@@ -109,7 +70,6 @@ function AdminCourses() {
   return (
     <div className="admin-page">
       <div className="admin-container">
-
         <div className="admin-header">
           <div>
             <h1>Gestion des cours</h1>
@@ -117,30 +77,15 @@ function AdminCourses() {
           </div>
         </div>
 
-        {error && (
-          <div className="admin-error">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="admin-success">
-            {success}
-          </div>
-        )}
+        {error && <div className="admin-error">{error}</div>}
+        {success && <div className="admin-success">{success}</div>}
 
         <div className="admin-card">
           <h2>Créer un cours</h2>
 
-          <form
-            className="admin-form"
-            onSubmit={handleCreate}
-          >
+          <form className="admin-form" onSubmit={handleCreate}>
             <div className="form-group">
-              <label htmlFor="code">
-                Code du cours
-              </label>
-
+              <label htmlFor="code">Code du cours</label>
               <input
                 id="code"
                 name="code"
@@ -152,10 +97,7 @@ function AdminCourses() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="name">
-                Nom du cours
-              </label>
-
+              <label htmlFor="name">Nom du cours</label>
               <input
                 id="name"
                 name="name"
@@ -166,10 +108,7 @@ function AdminCourses() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="description">
-                Description
-              </label>
-
+              <label htmlFor="description">Description</label>
               <textarea
                 id="description"
                 name="description"
@@ -178,10 +117,7 @@ function AdminCourses() {
               />
             </div>
 
-            <button
-              className="btn btn-primary"
-              type="submit"
-            >
+            <button className="btn btn-primary" type="submit">
               Créer le cours
             </button>
           </form>
@@ -191,13 +127,9 @@ function AdminCourses() {
           <h2>Liste des cours</h2>
 
           {loading ? (
-            <div className="admin-loading">
-              Chargement des cours...
-            </div>
+            <div className="admin-loading">Chargement des cours...</div>
           ) : courses.length === 0 ? (
-            <div className="admin-loading">
-              Aucun cours disponible.
-            </div>
+            <div className="admin-loading">Aucun cours disponible.</div>
           ) : (
             <div className="admin-table-container">
               <table className="admin-table">
@@ -216,9 +148,7 @@ function AdminCourses() {
                       <td>{course.id}</td>
                       <td>{course.code || "-"}</td>
                       <td>{course.name || "-"}</td>
-                      <td>
-                        {course.description || "-"}
-                      </td>
+                      <td>{course.description || "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -226,7 +156,6 @@ function AdminCourses() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
