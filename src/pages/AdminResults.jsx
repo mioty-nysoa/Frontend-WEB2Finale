@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
+import { fetchAdminExams, fetchExamResults } from "../services/Api";
 import "./Admin.css";
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 function AdminResults() {
   const [exams, setExams] = useState([]);
@@ -11,33 +9,7 @@ function AdminResults() {
 
   const [loadingExams, setLoadingExams] = useState(true);
   const [loadingResults, setLoadingResults] = useState(false);
-
   const [error, setError] = useState("");
-
-  const getToken = () => localStorage.getItem("token");
-
-  const request = async (url) => {
-    const response = await fetch(`${API_URL}${url}`, {
-      headers: {
-        Authorization: `Bearer ${getToken()}`,
-      },
-    });
-
-    const data =
-      response.status === 204
-        ? null
-        : await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data?.message ||
-          data?.error ||
-          "Impossible de récupérer les données."
-      );
-    }
-
-    return data;
-  };
 
   useEffect(() => {
     const loadExams = async () => {
@@ -45,12 +17,12 @@ function AdminResults() {
         setLoadingExams(true);
         setError("");
 
-        const data = await request("/api/exams");
+        const data = await fetchAdminExams();
 
         setExams(
           Array.isArray(data)
             ? data
-            : data.exams || []
+            : data?.exams || []
         );
       } catch (err) {
         setError(err.message);
@@ -72,14 +44,12 @@ function AdminResults() {
       setLoadingResults(true);
       setError("");
 
-      const data = await request(
-        `/api/exams/${examId}/results`
-      );
-
+      const data = await fetchExamResults(examId);
+console.log("Données résultats :", data);
       setResults(
         Array.isArray(data)
           ? data
-          : data.results || []
+          : data?.results || []
       );
     } catch (err) {
       setResults([]);
@@ -97,52 +67,74 @@ function AdminResults() {
     loadResults(examId);
   };
 
+ const getStudentDisplay = (res, index) => {
+  
+  if (res.student_name || res.studentName || res.user_name || res.student?.name) {
+    return res.student_name || res.studentName || res.user_name || res.student?.name;
+  }
+
+   if (res.student_number || res.studentNumber) {
+    return res.student_number || res.studentNumber;
+  }
+  
+  const formattedIndex = String(index + 1).padStart(4, '0');
+  return `STD${formattedIndex}`;
+};
+  
+  const getScoreDisplay = (res) => {
+    // Ajout de score_obtained, note, points, correct_answers...
+    const scoreVal = res.score ?? res.score_obtained ?? res.note ?? res.points ?? res.correct_answers ?? res.user_score;
+    return scoreVal !== undefined && scoreVal !== null && scoreVal !== ""
+      ? Number(scoreVal).toFixed(2)
+      : "0.00";
+  };
+
+  const getTotalDisplay = (res) => {
+    const totalVal = res.total ?? res.total_score ?? res.total_questions ?? res.max_score ?? res.questions_count;
+    return totalVal !== undefined && totalVal !== null ? totalVal : "1";
+  };
+  
+  const getAttemptsDisplay = (res) => {
+    return (
+      res.attempts ??
+      res.attempt_count ??
+      res.tentatives ??
+      res.attempts_count ??
+      "1"
+    );
+  };
+
   return (
     <div className="admin-page">
       <div className="admin-container">
         <div className="admin-header">
           <div>
             <h1>Résultats des examens</h1>
-            <p>
-              Consultez les résultats des étudiants.
-            </p>
+            <p>Consultez les résultats des étudiants.</p>
           </div>
         </div>
 
-        {error && (
-          <div className="admin-error">
-            {error}
-          </div>
-        )}
+        {error && <div className="admin-error">{error}</div>}
 
         <div className="admin-card">
           <h2>Sélectionner un examen</h2>
 
           <div className="form-group">
-            <label htmlFor="exam">
-              Examen
-            </label>
+            <label htmlFor="exam">Examen</label>
 
             {loadingExams ? (
-              <div className="admin-loading">
-                Chargement des examens...
-              </div>
+              <div className="admin-loading">Chargement des examens...</div>
             ) : (
               <select
                 id="exam"
                 value={selectedExam}
                 onChange={handleExamChange}
               >
-                <option value="">
-                  Sélectionner un examen
-                </option>
+                <option value="">Sélectionner un examen</option>
 
                 {exams.map((exam) => (
-                  <option
-                    key={exam.id}
-                    value={exam.id}
-                  >
-                    {exam.title || exam.name}
+                  <option key={exam.id} value={exam.id}>
+                    {exam.title || exam.name || `Examen ${exam.id}`}
                   </option>
                 ))}
               </select>
@@ -155,13 +147,9 @@ function AdminResults() {
             <h2>Résultats des étudiants</h2>
 
             {loadingResults ? (
-              <div className="admin-loading">
-                Chargement des résultats...
-              </div>
+              <div className="admin-loading">Chargement des résultats...</div>
             ) : results.length === 0 ? (
-              <p>
-                Aucun résultat disponible pour cet examen.
-              </p>
+              <p>Aucun résultat disponible pour cet examen.</p>
             ) : (
               <div className="admin-table-container">
                 <table className="admin-table">
@@ -176,31 +164,11 @@ function AdminResults() {
 
                   <tbody>
                     {results.map((result, index) => (
-                      <tr
-                        key={
-                          result.studentId ||
-                          result.id ||
-                          index
-                        }
-                      >
-                        <td>
-                          {result.student?.name ||
-                            result.studentName ||
-                            result.name ||
-                            "-"}
-                        </td>
-
-                        <td>
-                          {result.score ?? "-"}
-                        </td>
-
-                        <td>
-                          {result.total ?? "-"}
-                        </td>
-
-                        <td>
-                          {result.attempts ?? "-"}
-                        </td>
+                      <tr key={result.id || result.student_id || result.studentId || index}>
+                        <td>{getStudentDisplay(result,index)}</td>
+                        <td>{getScoreDisplay(result)}</td>
+                        <td>{getTotalDisplay(result)}</td>
+                        <td>{getAttemptsDisplay(result)}</td>
                       </tr>
                     ))}
                   </tbody>

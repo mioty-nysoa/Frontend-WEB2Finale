@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
+import { fetchCourses, createCourse } from "../services/Api";
 import "./Admin.css";
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 function AdminCourses() {
   const [courses, setCourses] = useState([]);
@@ -16,44 +14,12 @@ function AdminCourses() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const getToken = () => localStorage.getItem("token");
-
-  const request = async (url, options = {}) => {
-    const response = await fetch(`${API_URL}${url}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-        ...(options.headers || {}),
-      },
-    });
-
-    let data = null;
-
-    if (response.status !== 204) {
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
-      }
-    }
-
-    if (!response.ok) {
-      throw new Error(
-        data?.message ||
-          "Une erreur est survenue lors de la requête."
-      );
-    }
-
-    return data;
-  };
-
   const loadCourses = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const data = await request("/api/courses");
+      const data = await fetchCourses();
 
       setCourses(
         Array.isArray(data) ? data : data?.courses || []
@@ -83,13 +49,10 @@ function AdminCourses() {
       setError("");
       setSuccess("");
 
-      await request("/api/courses", {
-        method: "POST",
-        body: JSON.stringify({
-          code: form.code,
-          name: form.name,
-          description: form.description,
-        }),
+      await createCourse({
+        code: form.code,
+        name: form.name,
+        description: form.description,
       });
 
       setSuccess("Cours créé avec succès.");
@@ -211,9 +174,9 @@ function AdminCourses() {
                 </thead>
 
                 <tbody>
-                  {courses.map((course) => (
-                    <tr key={course.id}>
-                      <td>{course.id}</td>
+                  {courses.map((course, index) => (
+                    <tr key={course.id || course._id || index}>
+                      <td>{course.id || course._id || "-"}</td>
                       <td>{course.code || "-"}</td>
                       <td>{course.name || "-"}</td>
                       <td>

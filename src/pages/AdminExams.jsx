@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Admin.css";
-
-const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:8080";
+import { 
+  fetchAdminExams, 
+  fetchCourses, 
+  createExam 
+} from "../services/Api";
 
 function AdminExams() {
   const navigate = useNavigate();
@@ -24,41 +25,12 @@ function AdminExams() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const getToken = () => localStorage.getItem("token");
-
-  const request = async (url, options = {}) => {
-    const response = await fetch(`${API_URL}${url}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-        ...(options.headers || {}),
-      },
-    });
-
-    const data =
-      response.status === 204 ? null : await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data?.message ||
-          data?.error ||
-          "Une erreur est survenue."
-      );
-    }
-
-    return data;
-  };
-
-  // =========================
-  // Charger les examens
-  // =========================
   const loadExams = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const data = await request("/api/exams");
+      const data = await fetchAdminExams();
 
       setExams(
         Array.isArray(data)
@@ -72,14 +44,11 @@ function AdminExams() {
     }
   };
 
-  // =========================
-  // Charger les cours
-  // =========================
   const loadCourses = async () => {
     try {
       setLoadingCourses(true);
 
-      const data = await request("/api/courses");
+      const data = await fetchCourses();
 
       setCourses(
         Array.isArray(data)
@@ -98,9 +67,6 @@ function AdminExams() {
     loadCourses();
   }, []);
 
-  // =========================
-  // Modifier le formulaire
-  // =========================
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -110,25 +76,20 @@ function AdminExams() {
     });
   };
 
-  // =========================
-  // Créer un examen
-  // =========================
+  
   const handleCreate = async (event) => {
     event.preventDefault();
 
     setError("");
     setSuccess("");
 
-    // Vérifications
     if (!form.title.trim()) {
       setError("Le titre de l'examen est obligatoire.");
       return;
     }
 
     if (!form.description.trim()) {
-      setError(
-        "La description de l'examen est obligatoire."
-      );
+      setError("La description de l'examen est obligatoire.");
       return;
     }
 
@@ -138,39 +99,31 @@ function AdminExams() {
     }
 
     if (!form.startDate || !form.endDate) {
-      setError(
-        "Veuillez renseigner les dates de début et de fin."
-      );
+      setError("Veuillez renseigner les dates de début et de fin.");
       return;
     }
 
-    if (
-      new Date(form.endDate) <=
-      new Date(form.startDate)
-    ) {
-      setError(
-        "La date de fin doit être après la date de début."
-      );
+    if (new Date(form.endDate) <= new Date(form.startDate)) {
+      setError("La date de fin doit être après la date de début.");
       return;
     }
 
     try {
       setLoading(true);
 
-      await request("/api/exams", {
-        method: "POST",
-        body: JSON.stringify({
-          title: form.title,
-          description: form.description,
-          courseId: form.courseId,
-          startDate: form.startDate,
-          endDate: form.endDate,
-        }),
+      await createExam({
+        title: form.title,
+        description: form.description,
+        courseId: form.courseId,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        course_id: form.courseId,
+        start_date: form.startDate,
+        end_date: form.endDate,
       });
 
       setSuccess("Examen créé avec succès.");
 
-      // Réinitialiser le formulaire
       setForm({
         title: "",
         description: "",
@@ -179,7 +132,6 @@ function AdminExams() {
         endDate: "",
       });
 
-      // Recharger la liste
       await loadExams();
     } catch (err) {
       setError(err.message);
@@ -188,106 +140,40 @@ function AdminExams() {
     }
   };
 
-  // =========================
-  // Supprimer un examen
-  // =========================
-  const handleDelete = async (examId) => {
-    const confirmed = window.confirm(
-      "Voulez-vous vraiment supprimer cet examen ?"
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      setError("");
-      setSuccess("");
-
-      await request(`/api/exams/${examId}`, {
-        method: "DELETE",
-      });
-
-      setSuccess("Examen supprimé avec succès.");
-
-      await loadExams();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  // =========================
-  // Trouver le nom du cours
-  // =========================
   const getCourseName = (exam) => {
-    if (exam.course?.name) {
-      return exam.course.name;
+    if (!exam) return "Cours non renseigné";
+   
+    if (exam.course_name || exam.courseName) {
+      return exam.course_name || exam.courseName;
     }
 
-    if (exam.course?.title) {
-      return exam.course.title;
-    }
+   const targetCourseId = exam.courseId || exam.course_id;
+    if (!targetCourseId) return "Cours non renseigné";
 
-    const course = courses.find(
-      (course) =>
-        String(course.id) === String(exam.courseId)
-    );
-
-    return (
-      course?.name ||
-      course?.title ||
-      "Cours non renseigné"
-    );
+    const course = courses.find((c) => String(c.id) === String(targetCourseId));
+    return course ? (course.name || course.title) : "Cours non renseigné";
   };
 
   return (
     <div className="admin-page">
       <div className="admin-container">
 
-        {/* =========================
-            HEADER
-        ========================= */}
         <div className="admin-header">
           <div>
             <h1>Gestion des examens</h1>
-
-            <p>
-              Créez, planifiez et gérez les examens.
-            </p>
+            <p>Créez, planifiez et gérez les examens.</p>
           </div>
         </div>
 
-        {/* =========================
-            MESSAGES
-        ========================= */}
-        {error && (
-          <div className="admin-error">
-            {error}
-          </div>
-        )}
+        {error && <div className="admin-error">{error}</div>}
+        {success && <div className="admin-success">{success}</div>}
 
-        {success && (
-          <div className="admin-success">
-            {success}
-          </div>
-        )}
-
-        {/* =========================
-            CREATION EXAMEN
-        ========================= */}
         <div className="admin-card">
           <h2>Créer un examen</h2>
 
-          <form
-            className="admin-form"
-            onSubmit={handleCreate}
-          >
-            {/* TITRE */}
+          <form className="admin-form" onSubmit={handleCreate}>
             <div className="form-group">
-              <label htmlFor="title">
-                Titre de l'examen
-              </label>
-
+              <label htmlFor="title">Titre de l'examen</label>
               <input
                 id="title"
                 name="title"
@@ -299,12 +185,8 @@ function AdminExams() {
               />
             </div>
 
-            {/* DESCRIPTION */}
             <div className="form-group">
-              <label htmlFor="description">
-                Description
-              </label>
-
+              <label htmlFor="description">Description</label>
               <textarea
                 id="description"
                 name="description"
@@ -315,12 +197,8 @@ function AdminExams() {
               />
             </div>
 
-            {/* COURS */}
             <div className="form-group">
-              <label htmlFor="courseId">
-                Cours
-              </label>
-
+              <label htmlFor="courseId">Cours</label>
               <select
                 id="courseId"
                 name="courseId"
@@ -335,24 +213,15 @@ function AdminExams() {
                 </option>
 
                 {courses.map((course) => (
-                  <option
-                    key={course.id}
-                    value={course.id}
-                  >
-                    {course.name ||
-                      course.title ||
-                      `Cours ${course.id}`}
+                  <option key={course.id} value={course.id}>
+                    {course.name || course.title || `Cours ${course.id}`}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* DATE DEBUT */}
             <div className="form-group">
-              <label htmlFor="startDate">
-                Date de début
-              </label>
-
+              <label htmlFor="startDate">Date de début</label>
               <input
                 id="startDate"
                 name="startDate"
@@ -363,12 +232,8 @@ function AdminExams() {
               />
             </div>
 
-            {/* DATE FIN */}
             <div className="form-group">
-              <label htmlFor="endDate">
-                Date de fin
-              </label>
-
+              <label htmlFor="endDate">Date de fin</label>
               <input
                 id="endDate"
                 name="endDate"
@@ -385,108 +250,61 @@ function AdminExams() {
                 className="btn btn-primary"
                 disabled={loading}
               >
-                {loading
-                  ? "Création..."
-                  : "Créer l'examen"}
+                {loading ? "Création..." : "Créer l'examen"}
               </button>
             </div>
           </form>
         </div>
 
-        {/* =========================
-            LISTE DES EXAMENS
-        ========================= */}
         <div className="admin-card">
           <h2>Examens créés</h2>
 
           {loading && exams.length === 0 ? (
-            <div className="admin-loading">
-              Chargement des examens...
-            </div>
+            <div className="admin-loading">Chargement des examens...</div>
           ) : exams.length === 0 ? (
-            <p>
-              Aucun examen n'a encore été créé.
-            </p>
+            <p>Aucun examen n'a encore été créé.</p>
           ) : (
             <div className="exam-list">
               {exams.map((exam) => (
-                <div
-                  className="exam-card"
-                  key={exam.id}
-                >
-                  <h3>
-                    {exam.title ||
-                      exam.name ||
-                      `Examen ${exam.id}`}
-                  </h3>
-
+                <div className="exam-card" key={exam.id}>
+                  <h3>{exam.title || exam.name || `Examen ${exam.id}`}</h3>
+                  <p>{exam.description || "Aucune description."}</p>
                   <p>
-                    {exam.description ||
-                      "Aucune description."}
+                    <strong>Cours :</strong> {getCourseName(exam)}
                   </p>
-
-                  <p>
-                    <strong>Cours :</strong>{" "}
-                    {getCourseName(exam)}
-                  </p>
-
                   <p>
                     <strong>Début :</strong>{" "}
-                    {exam.startDate
-                      ? new Date(
-                          exam.startDate
-                        ).toLocaleString()
+                    {exam.startDate || exam.start_date
+                      ? new Date(exam.startDate || exam.start_date).toLocaleString()
                       : "Non renseignée"}
                   </p>
-
                   <p>
                     <strong>Fin :</strong>{" "}
-                    {exam.endDate
-                      ? new Date(
-                          exam.endDate
-                        ).toLocaleString()
+                    {exam.endDate || exam.end_date
+                      ? new Date(exam.endDate || exam.end_date).toLocaleString()
                       : "Non renseignée"}
                   </p>
 
                   <div className="admin-actions">
-
-                    {/* QUESTIONS */}
                     <button
                       type="button"
                       className="btn btn-primary"
                       onClick={() =>
-                        navigate(
-                          `/admin/exams/${exam.id}/questions`
-                        )
+                        navigate(`/admin/exams/${exam.id}/questions`)
                       }
                     >
                       Ajouter des questions
                     </button>
 
-                    {/* RESULTATS */}
                     <button
                       type="button"
                       className="btn btn-secondary"
                       onClick={() =>
-                        navigate(
-                          `/admin/exams/${exam.id}/results`
-                        )
+                        navigate(`/admin/exams/${exam.id}/results`)
                       }
                     >
                       Résultats
                     </button>
-
-                    {/* SUPPRIMER */}
-                    <button
-                      type="button"
-                      className="btn btn-danger"
-                      onClick={() =>
-                        handleDelete(exam.id)
-                      }
-                    >
-                      Supprimer
-                    </button>
-
                   </div>
                 </div>
               ))}

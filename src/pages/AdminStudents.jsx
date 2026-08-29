@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
+import {
+  fetchStudents,
+  createStudent,
+  desactivateStudent,
+  activateStudent,
+  resetStudentPassword
+} from "../services/Api";
 import "./Admin.css";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 function AdminStudents() {
   const [students, setStudents] = useState([]);
@@ -22,44 +27,12 @@ function AdminStudents() {
     });
   };
 
-  const getToken = () => localStorage.getItem("token");
-
-  const request = async (url, options = {}) => {
-    const response = await fetch(`${API_URL}${url}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-        ...(options.headers || {}),
-      },
-    });
-
-    if (!response.ok) {
-      let message = "Une erreur est survenue.";
-
-      try {
-        const data = await response.json();
-        message = data.message || data.error || message;
-      } catch {
-        // La réponse n'est pas au format JSON
-      }
-
-      throw new Error(message);
-    }
-
-    if (response.status === 204) {
-      return null;
-    }
-
-    return response.json();
-  };
-
   const loadStudents = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const data = await request("/api/students");
+      const data = await fetchStudents();
 
       setStudents(
         Array.isArray(data) ? data : data.students || []
@@ -82,10 +55,7 @@ function AdminStudents() {
       setError("");
       setSuccess("");
 
-      await request("/api/students", {
-        method: "POST",
-        body: JSON.stringify(form),
-      });
+      await createStudent(form);
 
       setSuccess("Étudiant créé avec succès.");
 
@@ -105,13 +75,8 @@ function AdminStudents() {
     try {
       setError("");
       setSuccess("");
-
-      await request(`/api/students/${student.id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          active: true,
-        }),
-      });
+    
+    await activateStudent(student.id);
 
       setSuccess("Étudiant activé avec succès.");
       await loadStudents();
@@ -120,14 +85,12 @@ function AdminStudents() {
     }
   };
 
-  const handleDeactivate = async (student) => {
+  const handleDesactivate = async (student) => {
     try {
       setError("");
       setSuccess("");
 
-      await request(`/api/students/${student.id}`, {
-        method: "DELETE",
-      });
+      await desactivateStudent(student.id);
 
       setSuccess("Étudiant désactivé avec succès.");
       await loadStudents();
@@ -137,30 +100,24 @@ function AdminStudents() {
   };
 
   const handleResetPassword = async (student) => {
-    const confirmed = window.confirm(
-      `Réinitialiser le mot de passe de ${
+    const newPassword = window.prompt(
+      `Entrez le nouveau mot de passe pour ${
         student.name || student.email
-      } ?`
+      } :`
     );
 
-    if (!confirmed) {
+    if (!newPassword) {
       return;
     }
 
     try {
       setError("");
       setSuccess("");
-
-      await request(`/api/students/${student.id}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          resetPassword: true,
-        }),
-      });
+      await resetStudentPassword(student.id,newPassword);
 
       setSuccess("Mot de passe réinitialisé avec succès.");
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Erreur lors de la réinitialisation du mot de passe.");
     }
   };
 
@@ -175,28 +132,15 @@ function AdminStudents() {
           </div>
         </div>
 
-        {error && (
-          <div className="admin-error">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="admin-success">
-            {success}
-          </div>
-        )}
+        {error && <div className="admin-error">{error}</div>}
+        {success && <div className="admin-success">{success}</div>}
 
         <div className="admin-card">
           <h2>Créer un étudiant</h2>
 
-          <form
-            className="admin-form"
-            onSubmit={handleCreate}
-          >
+          <form className="admin-form" onSubmit={handleCreate}>
             <div className="form-group">
               <label htmlFor="name">Nom</label>
-
               <input
                 id="name"
                 name="name"
@@ -208,7 +152,6 @@ function AdminStudents() {
 
             <div className="form-group">
               <label htmlFor="email">Adresse e-mail</label>
-
               <input
                 id="email"
                 name="email"
@@ -220,10 +163,7 @@ function AdminStudents() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">
-                Mot de passe initial
-              </label>
-
+              <label htmlFor="password">Mot de passe initial</label>
               <input
                 id="password"
                 name="password"
@@ -235,10 +175,7 @@ function AdminStudents() {
             </div>
 
             <div className="admin-actions">
-              <button
-                className="btn btn-primary"
-                type="submit"
-              >
+              <button className="btn btn-primary" type="submit">
                 Créer l'étudiant
               </button>
             </div>
@@ -249,13 +186,10 @@ function AdminStudents() {
           <h2>Liste des étudiants</h2>
 
           {loading ? (
-            <div className="admin-loading">
-              Chargement des étudiants...
-            </div>
+            <div className="admin-loading">Chargement des étudiants...</div>
           ) : (
             <div className="admin-table-container">
               <table className="admin-table">
-
                 <thead>
                   <tr>
                     <th>ID</th>
@@ -270,56 +204,37 @@ function AdminStudents() {
                   {students.map((student) => {
                     const active =
                       student.active ??
-                      student.enabled ??
+                      student.is_active ??
                       student.isActive ??
-                      true;
+                      false;
 
                     return (
                       <tr key={student.id}>
                         <td>{student.id}</td>
-
-                        <td>
-                          {student.name ||
-                            student.username ||
-                            "-"}
-                        </td>
-
-                        <td>
-                          {student.email || "-"}
-                        </td>
-
+                        <td>{student.name || student.username || "-"}</td>
+                        <td>{student.email || "-"}</td>
                         <td>
                           <span
                             className={`badge ${
-                              active
-                                ? "badge-active"
-                                : "badge-inactive"
+                              active ? "badge-active" : "badge-inactive"
                             }`}
                           >
-                            {active
-                              ? "Actif"
-                              : "Désactivé"}
+                            {active ? "Actif" : "Désactivé"}
                           </span>
                         </td>
-
                         <td>
                           <div className="admin-actions">
-
                             {active ? (
                               <button
                                 className="btn btn-danger"
-                                onClick={() =>
-                                  handleDeactivate(student)
-                                }
+                                onClick={() => handleDesactivate(student)}
                               >
                                 Désactiver
                               </button>
                             ) : (
                               <button
                                 className="btn btn-success"
-                                onClick={() =>
-                                  handleActivate(student)
-                                }
+                                onClick={() => handleActivate(student)}
                               >
                                 Activer
                               </button>
@@ -327,20 +242,16 @@ function AdminStudents() {
 
                             <button
                               className="btn btn-warning"
-                              onClick={() =>
-                                handleResetPassword(student)
-                              }
+                              onClick={() => handleResetPassword(student)}
                             >
                               Réinitialiser le mot de passe
                             </button>
-
                           </div>
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
-
               </table>
             </div>
           )}

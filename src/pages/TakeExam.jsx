@@ -1,6 +1,6 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchMyExamById, submitExam } from "../services/Api";
+import { fetchAdminExams, fetchExamQuestions, submitExam } from "../services/Api";
 import "./Student.css";
 
 const TakeExam = () => {
@@ -8,22 +8,44 @@ const TakeExam = () => {
   const { id } = useParams();
 
   const [exam, setExam] = useState(null);
+  const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   useEffect(() => {
     if (!id) return;
-  fetchMyExamById(id)
-      .then((data) => {
-        if (data) setExam(data);
-      })
-      .catch((err) => {
-        console.error("Erreur lors de la récupération de l'examen :", err);
+
+    async function loadData() {
+      try {
+        setLoading(true);
+
+        // 1. Informations de l'examen
+        const examsList = await fetchAdminExams().catch(() => []);
+        const currentExam = Array.isArray(examsList) 
+          ? examsList.find((e) => e.id === id || e.exam_id === id) 
+          : null;
+
+        if (currentExam) {
+          setExam(currentExam);
+        }
+
+        // 2. Questions de l'examen
+        const fetchedQuestions = await fetchExamQuestions(id);
+        const qList = Array.isArray(fetchedQuestions)
+          ? fetchedQuestions
+          : (fetchedQuestions?.data || []);
+
+        setQuestions(qList);
+      } catch (err) {
+        console.error("Erreur de chargement :", err);
         setError("Impossible de charger l'examen.");
-      })
-      .finally(() => {
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+
+    loadData();
   }, [id]);
 
   const handleSelectOption = (questionId, choiceId) => {
@@ -31,52 +53,102 @@ const TakeExam = () => {
   };
 
   const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+  if (e) e.preventDefault();
 
-    const formattedAnswers = Object.entries(answers).map(([questionId, choiceId]) => ({
-      question_id: parseInt(questionId, 10),
-      choice_id: parseInt(choiceId, 10),
-    }));
+  const formattedAnswers = Object.entries(answers).map(([qId, cId]) => ({
+    question_id: qId,
+    choice_id: cId,
+    questionId: qId,
+    choiceId: cId
+  }));
 
-    try {
-     const resultData = await submitExam(id, formattedAnswers);
+  try {
+    const resultData = await submitExam(id, { answers: formattedAnswers });
+    navigate("/student/results", { state: resultData });
+  } catch (err) {
+    console.error("Erreur de soumission :", err);
+    alert(err.message || "Erreur lors de la soumission de l'examen.");
+  }
+};
 
-      navigate("/student/results", { state: resultData });
-    } catch (err) {
-      console.error("Erreur de sauvegarde sur le serveur :", err);
-      alert(err.message || "Erreur lors de la soumission de l'examen.");
-    }
-  };
+  if (loading) {
+    return (
+      <div className="take-exam-container">
+        <p>Chargement de l'examen...</p>
+      </div>
+    );
+  }
 
-  if (loading) return <div className="take-exam-container"><p>Chargement de l'examen...</p></div>;
-  if (error) return <div className="take-exam-container"><p>{error}</p></div>;
-  if (!exam) return null;
+  if (error) {
+    return (
+      <div className="take-exam-container">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="take-exam-container" style={{ textAlign: "center", padding: "40px 20px" }}>
+        <h2>{exam?.title || "Examen"}</h2>
+        <p style={{ margin: "20px 0", color: "#666" }}>
+          Cet examen ne contient aucune question pour le moment.
+        </p>
+        <button
+          type="button"
+          className="submit-btn"
+          onClick={() => navigate("/student/exams")}
+        >
+          RETOUR AUX EXAMENS
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="take-exam-container">
-      <h2>{exam.title}</h2>
-      
-      <form onSubmit={handleSubmit}>
-        {exam.questions?.map((question) => (
-          <div key={question.id} className="question-card">
-            <h3>{question.statement}</h3>
-            <div className="options-list">
-              {question.choices?.map((choice) => (
-                <label key={i} className="option-label">
-                  <input
-                    type="radio"
-                    name={`question-${question.id}`}
-                    value={choice.id}
-                    checked={answers[question.id] === choice.id}
-                    onChange={() => handleSelectOption(question.id, choice.id)}
-                  />
-                  {choice.text}
-                </label>
-              ))}
-            </div>
-          </div>
-        ))}
+      <h2 style={{ textAlign: "center", marginBottom: "30px" }}>{exam?.title || "Examen"}</h2>
 
-        <div className="exam-actions">
+      <form onSubmit={handleSubmit}>
+        {questions.map((question, index) => {
+          const questionText = question.text || question.statement || question.question;
+          const optionsList = question.choices || question.options || [];
+
+          return (
+            <div key={question.id || index} className="question-card" style={{ marginBottom: "25px", padding: "20px", border: "1px solid #ddd", borderRadius: "8px" }}>
+              <h3 style={{ fontSize: "1.2rem", marginBottom: "15px" }}>
+                {index + 1}. {questionText}
+              </h3>
+              
+             <div className="options-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {optionsList.map((choice, cIdx) => {
+                  // Récupère le véritable ID de la réponse (UUID ou int) depuis l'API
+                  const choiceId = choice.id ?? choice.choice_id ?? choice.option_id ?? cIdx;
+                  const choiceText = choice.text || choice.label || choice.statement || choice.text_content;
+
+                  return (
+                    <label 
+                      key={choiceId} 
+                      className="option-label"
+                      style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+                    >
+                      <input
+                        type="radio"
+                        name={`question-${question.id}`}
+                        value={choiceId}
+                        checked={answers[question.id] === choiceId}
+                        onChange={() => handleSelectOption(question.id, choiceId)}
+                      />
+                      <span>{choiceText}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="exam-actions" style={{ textAlign: "center", marginTop: "30px" }}>
           <button type="submit" className="submit-btn">
             ENVOYER
           </button>

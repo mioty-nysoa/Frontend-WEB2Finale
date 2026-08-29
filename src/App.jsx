@@ -7,6 +7,7 @@ import {
 
 import Login from "./pages/Login";
 import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminStudents from "./pages/AdminStudents";
@@ -22,67 +23,90 @@ import TakeExam from "./pages/TakeExam";
 function App() {
   return (
     <BrowserRouter>
-      <Navbar/>
+      <Navbar />
       <Routes>
-        <Route
-          path="/login"
-          element={<Login />}
-        />
+        {/* Route publique */}
+        <Route path="/login" element={<Login />} />
 
+        {/* --- ROUTES ADMIN --- */}
         <Route
-          path="/admin"
-          element={<AdminDashboard />}
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
         />
-
         <Route
           path="/admin/students"
-          element={<AdminStudents />}
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminStudents />
+            </ProtectedRoute>
+          }
         />
-
         <Route
           path="/admin/courses"
-          element={<AdminCourses />}
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminCourses />
+            </ProtectedRoute>
+          }
         />
-
         <Route
           path="/admin/exams"
-          element={<AdminExams />}
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminExams />
+            </ProtectedRoute>
+          }
         />
-
         <Route
           path="/admin/exams/:id/questions"
-          element={<AdminQuestions />}
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminQuestions />
+            </ProtectedRoute>
+          }
         />
-
         <Route
           path="/admin/exams/:id/results"
-          element={<AdminResults />}
+          element={
+            <ProtectedRoute allowedRoles={["ADMIN"]}>
+              <AdminResults />
+            </ProtectedRoute>
+          }
         />
 
+        {/* --- ROUTES ÉTUDIANT --- */}
         <Route
           path="/student/results"
-          element={<StudentResults />}
+          element={
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
+              <StudentResults />
+            </ProtectedRoute>
+          }
         />
-
         <Route
           path="/student/exams"
-          element={<StudentsExams />}
+          element={
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
+              <StudentsExams />
+            </ProtectedRoute>
+          }
         />
-
         <Route
           path="/student/exams/:id"
-          element={<TakeExam />}
+          element={
+            <ProtectedRoute allowedRoles={["STUDENT"]}>
+              <TakeExam />
+            </ProtectedRoute>
+          }
         />
 
-        <Route
-          path="/"
-          element={<Navigate to="/login" replace />}
-        />
-
-        <Route
-          path="*"
-          element={<Navigate to="/login" replace />}
-        />
+        {/* Redirections par défaut */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

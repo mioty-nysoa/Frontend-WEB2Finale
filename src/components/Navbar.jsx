@@ -18,16 +18,16 @@ const Navbar = () => {
       </div>
       {token && (
         <ul className="navbar-links">
-            {user.role === "student" && (
+            {user.role === "STUDENT" && (
                 <>
                     <li><Link to="/student">EXAMENS</Link></li>
                     <li><Link to="/student/results">RÉSULTATS</Link></li>
                 </>
             )}
 
-            {user.role === "admin" && (
+            {user.role === "ADMIN" && (
                <>
-                    <li><Link to="/admin">DASHBOARD</Link></li>
+                    <li><Link to="/admin/dashboard">DASHBOARD</Link></li>
                     <li><Link to="/admin/students">ETUDIANTS</Link></li>
                     <li><Link to="/admin/courses">COURS</Link></li>
                     <li><Link to="/admin/exams">EXAMENS</Link></li>   

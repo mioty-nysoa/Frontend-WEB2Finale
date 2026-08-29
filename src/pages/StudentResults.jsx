@@ -106,7 +106,9 @@ const StudentResults = () => {
                       : "N/A"}
                   </td>
                   <td>
-                    {res.score} / {res.total_points}
+                    <strong>
+                      {Number(res.score || 0).toFixed(2)} / {res.totalQuestions || res.total_questions || 20}
+                    </strong>
                   </td>
                 </tr>
               ))}
