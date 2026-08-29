@@ -10,7 +10,7 @@ const StudentExams = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Plus besoin d'extraire user.id, le token JWT gère l'authentification dans l'en-tête
+   
     Promise.all([fetchMyExams(), fetchMyResults()])
       .then(([examsData, resultsData]) => {
         setAllExams(examsData || []);
@@ -24,14 +24,13 @@ const StudentExams = () => {
       });
   }, []);
 
-  // OpenAPI utilise exam_id en snake_case dans les résultats
   const completedExamIds = savedResults.map((result) => result.exam_id);
   const currentDate = new Date();
 
   const availableExams = allExams.filter((exam) => {
     const notTaken = !completedExamIds.includes(exam.id);
 
-    // OpenAPI utilise start_date et end_date en snake_case
+   
     const startDate = new Date(exam.start_date);
     const endDate = new Date(exam.end_date);
     const isInRange = currentDate >= startDate && currentDate <= endDate;
@@ -40,9 +39,8 @@ const StudentExams = () => {
   });
 
   const handleStartExam = (examId) => {
-    // Redirection vers le passage d'examen
-    navigate(`/student/exam/${examId}`);
-  };
+  navigate(`/student/exams/${examId}`);  
+};
 
   if (loading) {
     return <div className="exams-container"><p>Chargement des examens...</p></div>;

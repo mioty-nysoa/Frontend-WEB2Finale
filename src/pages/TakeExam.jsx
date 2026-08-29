@@ -1,4 +1,4 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchMyExamById, submitExam } from "../services/Api";
 import "./Student.css";
@@ -11,9 +11,10 @@ const TakeExam = () => {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
   useEffect(() => {
     if (!id) return;
-  fetchMyExamById(id)
+    fetchMyExamById(id)
       .then((data) => {
         if (data) setExam(data);
       })
@@ -34,12 +35,12 @@ const TakeExam = () => {
     if (e) e.preventDefault();
 
     const formattedAnswers = Object.entries(answers).map(([questionId, choiceId]) => ({
-      question_id: parseInt(questionId, 10),
-      choice_id: parseInt(choiceId, 10),
+      question_id: questionId,
+      choice_id: choiceId,
     }));
 
     try {
-     const resultData = await submitExam(id, formattedAnswers);
+      const resultData = await submitExam(id, { answers: formattedAnswers });
 
       navigate("/student/results", { state: resultData });
     } catch (err) {
@@ -51,17 +52,18 @@ const TakeExam = () => {
   if (loading) return <div className="take-exam-container"><p>Chargement de l'examen...</p></div>;
   if (error) return <div className="take-exam-container"><p>{error}</p></div>;
   if (!exam) return null;
+
   return (
     <div className="take-exam-container">
       <h2>{exam.title}</h2>
-      
+
       <form onSubmit={handleSubmit}>
         {exam.questions?.map((question) => (
           <div key={question.id} className="question-card">
             <h3>{question.statement}</h3>
             <div className="options-list">
               {question.choices?.map((choice) => (
-                <label key={i} className="option-label">
+                <label key={choice.id} className="option-label">
                   <input
                     type="radio"
                     name={`question-${question.id}`}
@@ -69,7 +71,7 @@ const TakeExam = () => {
                     checked={answers[question.id] === choice.id}
                     onChange={() => handleSelectOption(question.id, choice.id)}
                   />
-                  {choice.text}
+                  {choice.label}
                 </label>
               ))}
             </div>
